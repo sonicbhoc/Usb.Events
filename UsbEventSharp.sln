@@ -5,7 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C890CEF0-21AF-4155-BF98-81E329B27839}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Usb.Events.Net.App", "src\Usb.Events.Net.App\Usb.Events.Net.App.fsproj", "{3B95B101-038A-46A2-83B0-D53ACAFF39E0}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Usb.Events.Net.Core", "src\Usb.Events.Net.Core\Usb.Events.Net.Core.fsproj", "{3B95B101-038A-46A2-83B0-D53ACAFF39E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

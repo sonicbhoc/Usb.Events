@@ -1,0 +1,10 @@
+<Project>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Deterministic>true</Deterministic>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <WarnOn>3390</WarnOn>
+       <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+</Project>

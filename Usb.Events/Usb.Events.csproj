@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>8.0</LangVersion>
+    <TargetFrameworks>net10.0;netstandard2.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -35,6 +35,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+    <PackageReference Include="Meziantou.Polyfill" Version="1.0.158">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.10" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
@@ -86,60 +92,36 @@
       <Flags>-shared</Flags>
     </PropertyGroup>
 
-    <Exec Command="getconf LONG_BIT" ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="LongBit" />
-    </Exec>
-
-    <Exec Command="arch" ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="Arch" />
-    </Exec>
-
     <PropertyGroup>
-      <IsIntel Condition="'$(Arch)' == 'i386' or '$(Arch)' == 'x86_64' or '$(Arch)' == 'i686' or '$(Arch)' == 'amd64'">true</IsIntel>
-      <IsArm Condition="'$(Arch)' == 'arm' or '$(Arch)' == 'arm64' or '$(Arch)' == 'armv6l' or '$(Arch)' == 'armv7l' or '$(Arch)' == 'armv8l' or '$(Arch)' == 'aarch64'">true</IsArm>
-      <Is32Bit Condition="'$(Arch)' == 'i386' or '$(Arch)' == 'i686' or '$(Arch)' == 'arm' or '$(Arch)' == 'armv6l' or '$(Arch)' == 'armv7l'">true</Is32Bit>
-      <Is64Bit Condition="'$(Arch)' == 'x86_64' or '$(Arch)' == 'amd64' or '$(Arch)' == 'arm64' or '$(Arch)' == 'armv8l' or '$(Arch)' == 'aarch64'">true</Is64Bit>
-    </PropertyGroup>
+       <IsIntel Condition="'$(IsCpuIntel)' == 'true'">true</IsIntel>
+       <IsArm Condition="'$(IsCpuArm)' == 'true'">true</IsArm>
+       <Is32Bit Condition="'$(IsCpu32Bit)' == 'true'">true</Is32Bit>
+       <Is64Bit Condition="'$(IsCpu64Bit)' == 'true'">true</Is64Bit>
+     </PropertyGroup>
 
     <!-- Intel 32 bit -->
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '32') And ('$(IsIntel)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -m32 ./Mac/UsbEventWatcher.Mac.c -o ./x86/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '32') And ('$(IsIntel)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -m32 ./Mac/UsbEventWatcher.Mac.c -o ./x86/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(IsIntel)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -m32 ./Linux/UsbEventWatcher.Linux.c -o ./x86/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(IsIntel)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -m32 ./Linux/UsbEventWatcher.Linux.c -o ./x86/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
 
     <!-- Intel 64 bit -->
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '64') And ('$(IsIntel)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -m64 ./Mac/UsbEventWatcher.Mac.c -o ./x64/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '64') And ('$(IsIntel)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -m64 ./Mac/UsbEventWatcher.Mac.c -o ./x64/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '64') And ('$(IsIntel)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -m64 ./Linux/UsbEventWatcher.Linux.c -o ./x64/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '64') And ('$(IsIntel)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -m64 ./Linux/UsbEventWatcher.Linux.c -o ./x64/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
 
     <!-- Arm 32 bit -->
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '32') And ('$(IsArm)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -march=armv7-a+fp ./Mac/UsbEventWatcher.Mac.c -o ./arm/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '32') And ('$(IsArm)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -march=armv7-a+fp ./Mac/UsbEventWatcher.Mac.c -o ./arm/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '32') And ('$(IsArm)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -march=armv7-a+fp ./Linux/UsbEventWatcher.Linux.c -o ./arm/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '32') And ('$(IsArm)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -march=armv7-a+fp ./Linux/UsbEventWatcher.Linux.c -o ./arm/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
 
     <!-- Arm 64 bit -->
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '64') And ('$(IsArm)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -march=armv8-a ./Mac/UsbEventWatcher.Mac.c -o ./arm64/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('OSX')) And ('$(LongBit)' == '64') And ('$(IsArm)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -march=armv8-a ./Mac/UsbEventWatcher.Mac.c -o ./arm64/$(Configuration)/UsbEventWatcher.Mac.dylib -framework CoreFoundation -framework DiskArbitration -framework IOKit" />
 
-    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '64') And ('$(IsArm)' == 'true')"
-          WorkingDirectory=".\"
-          Command="gcc $(Flags) -march=armv8-a ./Linux/UsbEventWatcher.Linux.c -o ./arm64/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Linux')) And ('$(LongBit)' == '64') And ('$(IsArm)' == 'true')" WorkingDirectory=".\" Command="gcc $(Flags) -march=armv8-a ./Linux/UsbEventWatcher.Linux.c -o ./arm64/$(Configuration)/UsbEventWatcher.Linux.so -ludev -fPIC" />
   </Target>
 
   <!-- Build native Linux Arm library with Docker on Windows -->
@@ -169,47 +151,27 @@
 
     <!-- Build and run the Docker container for arm -->
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker build -t $(DockerImageArm) -f Dockerfile.arm ." />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker build -t $(DockerImageArm) -f Dockerfile.arm ." />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker run --name $(DockerContainerArm) $(DockerImageArm) arm $(Configuration)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker run --name $(DockerContainerArm) $(DockerImageArm) arm $(Configuration)" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker cp $(DockerContainerArm):UsbEventWatcher.Linux.so ./arm/$(Configuration)/UsbEventWatcher.Linux.so" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker cp $(DockerContainerArm):UsbEventWatcher.Linux.so ./arm/$(Configuration)/UsbEventWatcher.Linux.so" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker stop $(DockerContainerArm)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker stop $(DockerContainerArm)" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker rm $(DockerContainerArm)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker rm $(DockerContainerArm)" />
 
     <!-- Build and run the Docker container for arm64 -->
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker build -t $(DockerImageArm64) -f Dockerfile.arm64 ." />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker build -t $(DockerImageArm64) -f Dockerfile.arm64 ." />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker run --name $(DockerContainerArm64) $(DockerImageArm64) arm64 $(Configuration)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker run --name $(DockerContainerArm64) $(DockerImageArm64) arm64 $(Configuration)" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker cp $(DockerContainerArm64):UsbEventWatcher.Linux.so ./arm64/$(Configuration)/UsbEventWatcher.Linux.so" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker cp $(DockerContainerArm64):UsbEventWatcher.Linux.so ./arm64/$(Configuration)/UsbEventWatcher.Linux.so" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker stop $(DockerContainerArm64)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker stop $(DockerContainerArm64)" />
 
-    <Exec Condition="'$(DockerInstalled)' == 'true'"
-          WorkingDirectory=".\"
-          Command="docker rm $(DockerContainerArm64)" />
+    <Exec Condition="'$(DockerInstalled)' == 'true'" WorkingDirectory=".\" Command="docker rm $(DockerContainerArm64)" />
 
   </Target>
 

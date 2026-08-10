@@ -7,6 +7,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Usb.Events.Models;
 
 namespace Usb.Events;
 
@@ -213,7 +214,7 @@ public class UsbEventWatcher : IUsbEventWatcher
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            UsbDeviceList.RemoveAll(device => device.ProductID == usbDevice.ProductID && device.VendorID == usbDevice.VendorID && device.SerialNumber == usbDevice.SerialNumber);
+            UsbDeviceList.RemoveAll(device => device.ProductId == usbDevice.ProductId && device.VendorId == usbDevice.VendorId && device.SerialNumber == usbDevice.SerialNumber);
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -537,9 +538,9 @@ public class UsbEventWatcher : IUsbEventWatcher
         UsbDevice usbDevice = new UsbDevice
         {
             DeviceSystemPath = PnPEntityDeviceID,
-            ProductID = productId,
+            ProductId = productId,
             SerialNumber = serial,
-            VendorID = vendorId
+            VendorId = vendorId
         };
 
         // TODO::

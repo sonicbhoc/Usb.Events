@@ -1,43 +1,11 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 
-namespace Usb.Events;
-
-[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-internal struct UsbDeviceData
-{
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string DeviceName;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string DeviceSystemPath;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string Product;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string ProductDescription;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string ProductID;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string SerialNumber;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string Vendor;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string VendorDescription;
-
-    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 512)]
-    public string VendorID;
-}
+namespace Usb.Events.Models;
 
 /// <summary>
 /// USB device
 /// </summary>
-public class UsbDevice
+public record UsbDevice
 {
     /// <summary>
     /// Device name
@@ -67,7 +35,7 @@ public class UsbDevice
     /// <summary>
     /// Device product ID
     /// </summary>
-    public string ProductID { get; internal set; } = string.Empty;
+    public string ProductId { get; internal set; } = string.Empty;
 
     /// <summary>
     /// Device serial number
@@ -87,7 +55,7 @@ public class UsbDevice
     /// <summary>
     /// Device vendor ID
     /// </summary>
-    public string VendorID { get; internal set; } = string.Empty;
+    public string VendorId { get; internal set; } = string.Empty;
 
     /// <summary>
     /// Is device mounted
@@ -106,19 +74,6 @@ public class UsbDevice
     {
     }
 
-    internal UsbDevice(UsbDeviceData usbDeviceData)
-    {
-        DeviceName = usbDeviceData.DeviceName;
-        DeviceSystemPath = usbDeviceData.DeviceSystemPath;
-        Product = usbDeviceData.Product;
-        ProductDescription = usbDeviceData.ProductDescription;
-        ProductID = usbDeviceData.ProductID;
-        SerialNumber = usbDeviceData.SerialNumber;
-        Vendor = usbDeviceData.Vendor;
-        VendorDescription = usbDeviceData.VendorDescription;
-        VendorID = usbDeviceData.VendorID;
-    }
-
     /// <summary>
     /// Write all property values to a string
     /// </summary>
@@ -130,10 +85,10 @@ public class UsbDevice
                "Mounted Directory Path: " + MountedDirectoryPath + Environment.NewLine +
                "Product: " + Product + Environment.NewLine +
                "Product Description: " + ProductDescription + Environment.NewLine +
-               "Product ID: " + ProductID + Environment.NewLine +
+               "Product ID: " + ProductId + Environment.NewLine +
                "Serial Number: " + SerialNumber + Environment.NewLine +
                "Vendor: " + Vendor + Environment.NewLine +
                "Vendor Description: " + VendorDescription + Environment.NewLine +
-               "Vendor ID: " + VendorID + Environment.NewLine;
+               "Vendor ID: " + VendorId + Environment.NewLine;
     }
 }

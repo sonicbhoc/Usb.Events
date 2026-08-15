@@ -10,6 +10,7 @@ public record UsbDeviceEvent()
         Device = device;
         Context = context;
     }
+
     public required UsbDeviceAction Action { get; init; }
     public required UsbDevice Device { get; init; }
     public required UserData? Context { get; init; }

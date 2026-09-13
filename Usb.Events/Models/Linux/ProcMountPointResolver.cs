@@ -10,7 +10,7 @@ internal sealed class ProcMountPointResolver : IMountPointResolver
 {
     private readonly ProcMounts _procMounts = new();
 
-    public async Task<MountPoint> GetMountPointAsync(DeviceNode deviceNode, CancellationToken cancellationToken)
+    public async Task<MountPoint> FindMountPointAsync(DeviceNode deviceNode, CancellationToken cancellationToken)
     {
         var mountEntry = await
             _procMounts.ReadAsync()

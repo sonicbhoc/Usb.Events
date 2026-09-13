@@ -1,6 +1,6 @@
 namespace Usb.Events.Models;
 
-internal readonly record struct MountPoint(string? Value)
+public readonly record struct MountPoint(string? Value)
 {
     public static MountPoint NotMounted { get; } = new(null);
 

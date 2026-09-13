@@ -76,7 +76,6 @@ internal partial class SdDevice : SafeHandleZeroOrMinusOneIsInvalid
         string? vendorId = null;
 
         _ = NativeMethods.sd_device_get_property_value(this, "DEVNAME", ref name);
-        _ = NativeMethods.sd_device_get_syspath(this, ref sysPath);
         _ = NativeMethods.sd_device_get_property_value(this, "ID_MODEL", ref productName);
         _ = NativeMethods.sd_device_get_property_value(this, "ID_MODEL_FROM_DATABASE", ref productDescription);
         _ = NativeMethods.sd_device_get_property_value(this, "ID_MODEL_ID", ref productId);
@@ -85,10 +84,15 @@ internal partial class SdDevice : SafeHandleZeroOrMinusOneIsInvalid
         _ = NativeMethods.sd_device_get_property_value(this, "ID_VENDOR_FROM_DATABASE", ref vendorDescription);
         _ = NativeMethods.sd_device_get_property_value(this, "ID_VENDOR_ID", ref vendorId);
 
-        return new UsbDevice
+        int result = NativeMethods.sd_device_get_syspath(this, ref sysPath);
+        if (result > 0 || sysPath is null)
+            throw new InvalidOperationException(
+                "Unable to retreive SysPath for Device",
+                new Win32Exception(-result));
+
+        return new UsbDevice(new(sysPath))
         {
             DeviceName = name ?? string.Empty,
-            DeviceSystemPath = sysPath ?? string.Empty,
             MountedDirectoryPath = string.Empty,
             Product = productName ?? string.Empty,
             ProductDescription = productDescription ?? string.Empty,

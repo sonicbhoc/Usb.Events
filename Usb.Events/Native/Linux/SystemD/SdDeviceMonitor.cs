@@ -13,8 +13,27 @@ using Usb.Events.Models;
 namespace Usb.Events.Native.Linux.SystemD;
 
 [SupportedOSPlatform("linux")]
-internal partial class SdDeviceMonitor() : SafeHandleZeroOrMinusOneIsInvalid(true), IUsbEventProducer
+internal partial class SdDeviceMonitor(int bufferCapacity) : SafeHandleZeroOrMinusOneIsInvalid(true), INativeUsbEventProducer
 {
+    private const int DefaultBufferCapacity = 100;
+
+    private CancellationTokenSource CancellationTokenSource { get; set; } = new();
+
+    public SdDeviceMonitor() : this(DefaultBufferCapacity) { }
+
+    private Channel<UsbDeviceEvent> EventChannel { get; } =
+        Channel.CreateBounded<UsbDeviceEvent>(new BoundedChannelOptions(bufferCapacity)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            AllowSynchronousContinuations = false,
+            SingleReader = true,
+            SingleWriter = true
+        });
+
+    private UserData UserData { get; set; } = UserData.Empty;
+    private Task? MonitorTask { get; set; }
+    public bool IsRunning => MonitorTask is not null;
+
     private static partial class NativeMethods
     {
         private const string LibName = "libsystemd";
@@ -78,7 +97,9 @@ internal partial class SdDeviceMonitor() : SafeHandleZeroOrMinusOneIsInvalid(tru
         return monitor;
     }
 
-    public async Task ProduceAsync(ChannelWriter<UsbDeviceEvent> writer, UserData userData, CancellationToken cancellationToken)
+    public IAsyncEnumerable<UsbDeviceEvent> ProduceAsync(CancellationToken cancellationToken) => EventChannel.Reader.ReadAllAsync(cancellationToken);
+
+    private async Task MonitorEventsAsync(CancellationToken cancellationToken)
     {
         int result = NativeMethods.sd_device_monitor_get_fd(this);
 
@@ -109,18 +130,58 @@ internal partial class SdDeviceMonitor() : SafeHandleZeroOrMinusOneIsInvalid(tru
 
                 using var sdDevice = device;
 
-                await writer.WriteAsync(new UsbDeviceEvent()
+                await EventChannel.Writer.WriteAsync((new UsbDeviceEvent()
                 {
                     Action = sdDevice.GetAction(),
-                    Context = userData,
+                    Context = UserData,
                     Device = sdDevice.GetDeviceData()
-                }, cancellationToken);
+                }), cancellationToken);
             }
         }
+
+        EventChannel.Writer.Complete();
     }
 
     protected override bool ReleaseHandle()
     {
         return NativeMethods.sd_device_monitor_unref(this).IsInvalid;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            CancellationTokenSource.Cancel();
+
+            CancellationTokenSource.Dispose();
+            MonitorTask?.Dispose();
+            UserData.Dispose();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    public Task StartAsync(UserData userData, CancellationToken cancellationToken = default)
+    {
+        if (!IsRunning)
+        {
+            CancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            UserData = userData;
+            MonitorTask = MonitorEventsAsync(CancellationTokenSource.Token);
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public async Task StopAsync()
+    {
+        if (IsRunning)
+        {
+            await CancellationTokenSource.CancelAsync();
+            CancellationTokenSource.Dispose();
+            MonitorTask?.Dispose();
+            MonitorTask = null;
+            UserData = UserData.Empty;
+        }
     }
 }

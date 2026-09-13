@@ -14,7 +14,11 @@ public class UserData : SafeHandleZeroOrMinusOneIsInvalid
 
     public UserData(object? value) : base(ownsHandle: true)
     {
-        if (value == null) return;
+        if (value is null)
+        {
+            SetHandleAsInvalid();
+            return;
+        }
 
         // Allocates a normal handle. This keeps the object alive
         // and gives us a stable IntPtr token for native callbacks.

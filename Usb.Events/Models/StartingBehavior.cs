@@ -1,7 +1,10 @@
+using System;
+
 namespace Usb.Events.Models;
 
+[Flags]
 public enum StartingBehavior
 {
-    DoNotIncludePresentDevices,
-    IncludePresesntDevices
+    StartImmediately,
+    IncludeAttached,
 }

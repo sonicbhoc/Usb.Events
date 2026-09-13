@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
-using Usb.Events.Linux;
 using Usb.Events.Models;
 
 namespace Usb.Events.Native.Linux.SystemD;
@@ -122,51 +118,7 @@ internal partial class SdDeviceEnumerator() : SafeHandleZeroOrMinusOneIsInvalid(
 
     public void Reset()
     {
-        Current = new();
+        Current = null!;
         _isStarted = false;
-    }
-}
-
-[SupportedOSPlatform("linux")]
-internal class SystemdDeviceList(IEnumerable<string> subsystems) : IEnumerable<UsbDevice>, IDisposable, IUsbEventProducer
-{
-    private readonly SdDeviceEnumerator _enumerator = SdDeviceEnumerator.Create(subsystems);
-
-    public IEnumerator<UsbDevice> GetEnumerator()
-    {
-        return _enumerator;
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return GetEnumerator();
-    }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            _enumerator.Dispose();
-        }
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    public async Task ProduceAsync(ChannelWriter<UsbDeviceEvent> writer, UserData userData,
-        CancellationToken cancellationToken)
-    {
-        foreach (var device in this)
-        {
-            await writer.WriteAsync(new UsbDeviceEvent
-            {
-                Action = UsbDeviceAction.Plugged,
-                Context = userData,
-                Device = device
-            }, cancellationToken);
-        }
     }
 }
